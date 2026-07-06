@@ -108,4 +108,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: taurishield-sbom
-          path: sbom/taurishield.cdx.json
+          path: sbom/crates/**/taurishield.cdx.json
