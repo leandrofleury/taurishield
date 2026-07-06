@@ -1,6 +1,9 @@
 use anyhow::{Context, Result};
 use serde_json::json;
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 use taurishield_core::{CspMode, Manifest, SecurityProfile};
 
 #[derive(Debug, Clone)]
@@ -32,23 +35,42 @@ pub fn generate_tauri_project(manifest: &Manifest, output_base: &Path) -> Result
     let capabilities = caps_dir.join("default.json");
     fs::write(&tauri_conf, tauri_conf_json(manifest)?)?;
     fs::write(&capabilities, capability_json(manifest)?)?;
-    fs::write(root_dir.join("TAURISHIELD_BUILD_NOTES.md"), build_notes(manifest))?;
+    fs::write(
+        root_dir.join("TAURISHIELD_BUILD_NOTES.md"),
+        build_notes(manifest),
+    )?;
 
-    Ok(BuildOutput { root_dir, tauri_conf, capabilities })
+    Ok(BuildOutput {
+        root_dir,
+        tauri_conf,
+        capabilities,
+    })
 }
 
 fn sanitize_dir_name(input: &str) -> String {
     let mut out = String::new();
     for ch in input.chars() {
-        if ch.is_ascii_alphanumeric() { out.push(ch.to_ascii_lowercase()); }
-        else if ch == '-' || ch == '_' || ch == ' ' { out.push('-'); }
+        if ch.is_ascii_alphanumeric() {
+            out.push(ch.to_ascii_lowercase());
+        } else if ch == '-' || ch == '_' || ch == ' ' {
+            out.push('-');
+        }
     }
-    let normalized = out.split('-').filter(|p| !p.is_empty()).collect::<Vec<_>>().join("-");
-    if normalized.is_empty() { "app".to_string() } else { normalized }
+    let normalized = out
+        .split('-')
+        .filter(|p| !p.is_empty())
+        .collect::<Vec<_>>()
+        .join("-");
+    if normalized.is_empty() {
+        "app".to_string()
+    } else {
+        normalized
+    }
 }
 
 fn package_json(manifest: &Manifest) -> String {
-    format!(r#"{{
+    format!(
+        r#"{{
   "name": "{}",
   "version": "{}",
   "private": true,
@@ -61,11 +83,15 @@ fn package_json(manifest: &Manifest) -> String {
     "@tauri-apps/cli": "^2.0.0"
   }}
 }}
-"#, sanitize_dir_name(&manifest.application.name), manifest.application.version)
+"#,
+        sanitize_dir_name(&manifest.application.name),
+        manifest.application.version
+    )
 }
 
 fn index_html(manifest: &Manifest) -> String {
-    format!(r#"<!doctype html>
+    format!(
+        r#"<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -78,24 +104,32 @@ fn index_html(manifest: &Manifest) -> String {
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
-"#, manifest.application.name, manifest.application.name)
+"#,
+        manifest.application.name, manifest.application.name
+    )
 }
 
 fn main_js(manifest: &Manifest) -> String {
-    format!(r#"const target = {};
+    format!(
+        r#"const target = {};
 
 // TauriShield intentionally keeps the local UI minimal.
 // The remote application is loaded as the configured external URL by Tauri.
 document.querySelector('#app').textContent = `Opening ${{target}}`;
 window.location.replace(target);
-"#, serde_json::to_string(&manifest.source.url).unwrap())
+"#,
+        serde_json::to_string(&manifest.source.url).unwrap()
+    )
 }
 
 fn cargo_toml(manifest: &Manifest) -> String {
     let notification_dep = if manifest.security.permissions.notifications {
         "tauri-plugin-notification = \"2\"\n"
-    } else { "" };
-    format!(r#"[package]
+    } else {
+        ""
+    };
+    format!(
+        r#"[package]
 name = "{}"
 version = "{}"
 edition = "2021"
@@ -107,14 +141,21 @@ tauri-build = {{ version = "2", features = [] }}
 [dependencies]
 tauri = {{ version = "2", features = [] }}
 {}
-"#, sanitize_dir_name(&manifest.application.name), manifest.application.version, notification_dep)
+"#,
+        sanitize_dir_name(&manifest.application.name),
+        manifest.application.version,
+        notification_dep
+    )
 }
 
 fn main_rs(manifest: &Manifest) -> String {
     let notification_setup = if manifest.security.permissions.notifications {
         ".plugin(tauri_plugin_notification::init())"
-    } else { "" };
-    format!(r#"#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+    } else {
+        ""
+    };
+    format!(
+        r#"#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {{
     tauri::Builder::default()
@@ -122,12 +163,23 @@ fn main() {{
         .run(tauri::generate_context!())
         .expect("error while running TauriShield generated application");
 }}
-"#, notification_setup)
+"#,
+        notification_setup
+    )
 }
 
 fn tauri_conf_json(manifest: &Manifest) -> Result<String> {
-    let remote_urls: Vec<String> = manifest.allowlist.domains.iter()
-        .map(|d| format!("https://{}", d.trim_start_matches("https://").trim_start_matches("http://")))
+    let remote_urls: Vec<String> = manifest
+        .allowlist
+        .domains
+        .iter()
+        .map(|d| {
+            format!(
+                "https://{}",
+                d.trim_start_matches("https://")
+                    .trim_start_matches("http://")
+            )
+        })
         .collect();
 
     let csp = match manifest.security.csp {
@@ -177,8 +229,17 @@ fn capability_json(manifest: &Manifest) -> Result<String> {
         permissions.push("notification:default".to_string());
     }
 
-    let remote_urls: Vec<String> = manifest.allowlist.domains.iter()
-        .map(|d| format!("https://{}", d.trim_start_matches("https://").trim_start_matches("http://")))
+    let remote_urls: Vec<String> = manifest
+        .allowlist
+        .domains
+        .iter()
+        .map(|d| {
+            format!(
+                "https://{}",
+                d.trim_start_matches("https://")
+                    .trim_start_matches("http://")
+            )
+        })
         .collect();
 
     let value = json!({
@@ -195,17 +256,38 @@ fn capability_json(manifest: &Manifest) -> Result<String> {
 }
 
 fn strict_csp(domains: &[String]) -> String {
-    let urls = domains.iter().map(|d| format!("https://{}", d.trim_start_matches("https://").trim_start_matches("http://"))).collect::<Vec<_>>().join(" ");
+    let urls = domains
+        .iter()
+        .map(|d| {
+            format!(
+                "https://{}",
+                d.trim_start_matches("https://")
+                    .trim_start_matches("http://")
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
     format!("default-src 'self' {urls}; script-src 'self' {urls}; style-src 'self' 'unsafe-inline' {urls}; img-src 'self' data: blob: {urls}; connect-src 'self' {urls}; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action {urls}")
 }
 
 fn standard_csp(domains: &[String]) -> String {
-    let urls = domains.iter().map(|d| format!("https://{}", d.trim_start_matches("https://").trim_start_matches("http://"))).collect::<Vec<_>>().join(" ");
+    let urls = domains
+        .iter()
+        .map(|d| {
+            format!(
+                "https://{}",
+                d.trim_start_matches("https://")
+                    .trim_start_matches("http://")
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
     format!("default-src 'self' {urls}; script-src 'self' 'unsafe-inline' {urls}; style-src 'self' 'unsafe-inline' {urls}; img-src 'self' data: blob: {urls}; connect-src 'self' {urls}; frame-ancestors 'none'; object-src 'none'")
 }
 
 fn build_notes(manifest: &Manifest) -> String {
-    format!(r#"# TauriShield Build Notes
+    format!(
+        r#"# TauriShield Build Notes
 
 Generated from manifest for **{}**.
 
@@ -226,14 +308,21 @@ Generated from manifest for **{}**.
 - Identifier: `{}`
 - Security profile: `{:?}`
 
-"#, manifest.application.name, manifest.source.url, manifest.application.identifier, manifest.security.profile)
+"#,
+        manifest.application.name,
+        manifest.source.url,
+        manifest.application.identifier,
+        manifest.security.profile
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
-    use taurishield_core::{Allowlist, Application, CspMode, Permissions, Security, SecurityProfile, Source};
+    use taurishield_core::{
+        Allowlist, Application, CspMode, Permissions, Security, SecurityProfile, Source,
+    };
 
     fn manifest() -> Manifest {
         Manifest {
@@ -242,18 +331,28 @@ mod tests {
                 identifier: "br.com.taurishield.chatgpt".to_string(),
                 version: "0.3.0-beta.1".to_string(),
             },
-            source: Source { url: "https://chatgpt.com".to_string() },
+            source: Source {
+                url: "https://chatgpt.com".to_string(),
+            },
             security: Security {
                 profile: SecurityProfile::Strict,
                 csp: CspMode::Strict,
-                permissions: Permissions { notifications: true, ..Default::default() },
+                permissions: Permissions {
+                    notifications: true,
+                    ..Default::default()
+                },
             },
-            allowlist: Allowlist { domains: vec!["chatgpt.com".to_string(), "auth.openai.com".to_string()] },
+            allowlist: Allowlist {
+                domains: vec!["chatgpt.com".to_string(), "auth.openai.com".to_string()],
+            },
         }
     }
 
     fn temp_output() -> PathBuf {
-        let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("taurishield-builder-test-{nonce}"))
     }
 
@@ -275,7 +374,10 @@ mod tests {
         let raw = fs::read_to_string(generated.tauri_conf).unwrap();
         let value: serde_json::Value = serde_json::from_str(&raw).unwrap();
         assert_eq!(value["app"]["withGlobalTauri"], false);
-        assert!(value["app"]["security"]["csp"].as_str().unwrap().contains("frame-ancestors 'none'"));
+        assert!(value["app"]["security"]["csp"]
+            .as_str()
+            .unwrap()
+            .contains("frame-ancestors 'none'"));
         let _ = fs::remove_dir_all(output);
     }
 

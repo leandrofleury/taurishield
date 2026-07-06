@@ -1,7 +1,10 @@
 use anyhow::{Context, Result};
 use serde::Serialize;
 use serde_json::Value;
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct HardenReport {
@@ -39,7 +42,9 @@ pub fn inspect_tauri_project(project_root: &Path) -> Result<HardenReport> {
 
     inspect_capabilities(project_root, &mut findings)?;
 
-    let blocked = findings.iter().any(|f| matches!(f.severity, "high" | "critical"));
+    let blocked = findings
+        .iter()
+        .any(|f| matches!(f.severity, "high" | "critical"));
     Ok(HardenReport {
         schema_version: "taurishield.harden.v1",
         project_root: project_root.display().to_string(),
@@ -61,15 +66,25 @@ pub fn write_harden_report(report: &HardenReport, output: &Path) -> Result<()> {
 
 fn find_tauri_conf(project_root: &Path) -> Option<PathBuf> {
     let candidate = project_root.join("src-tauri").join("tauri.conf.json");
-    if candidate.exists() { Some(candidate) } else { None }
+    if candidate.exists() {
+        Some(candidate)
+    } else {
+        None
+    }
 }
 
 fn inspect_tauri_conf(path: &Path, findings: &mut Vec<HardenFinding>) -> Result<()> {
-    let raw = fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?;
-    let value: Value = serde_json::from_str(&raw).with_context(|| format!("failed to parse {}", path.display()))?;
+    let raw =
+        fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?;
+    let value: Value = serde_json::from_str(&raw)
+        .with_context(|| format!("failed to parse {}", path.display()))?;
     let file = path.display().to_string();
 
-    if value.pointer("/app/withGlobalTauri").and_then(Value::as_bool).unwrap_or(false) {
+    if value
+        .pointer("/app/withGlobalTauri")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
         findings.push(HardenFinding {
             severity: "high",
             code: "TS-HARDEN-GLOBAL-TAURI",
@@ -85,7 +100,8 @@ fn inspect_tauri_conf(path: &Path, findings: &mut Vec<HardenFinding>) -> Result<
             code: "TS-HARDEN-CSP-MISSING",
             file: file.clone(),
             message: "CSP is missing or null.".to_string(),
-            recommendation: "Define a restrictive CSP generated from an explicit allowlist.".to_string(),
+            recommendation: "Define a restrictive CSP generated from an explicit allowlist."
+                .to_string(),
         }),
         Some(Value::String(csp)) if csp.contains("*") => findings.push(HardenFinding {
             severity: "medium",
@@ -112,7 +128,8 @@ fn inspect_capabilities(project_root: &Path, findings: &mut Vec<HardenFinding>) 
             code: "TS-HARDEN-CAPABILITIES-MISSING",
             file: caps_dir.display().to_string(),
             message: "No capabilities directory found.".to_string(),
-            recommendation: "Use explicit Tauri capabilities and keep permissions minimal.".to_string(),
+            recommendation: "Use explicit Tauri capabilities and keep permissions minimal."
+                .to_string(),
         });
         return Ok(());
     }
@@ -120,15 +137,19 @@ fn inspect_capabilities(project_root: &Path, findings: &mut Vec<HardenFinding>) 
     for entry in fs::read_dir(caps_dir)? {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") { continue; }
+        if path.extension().and_then(|e| e.to_str()) != Some("json") {
+            continue;
+        }
         inspect_capability_file(&path, findings)?;
     }
     Ok(())
 }
 
 fn inspect_capability_file(path: &Path, findings: &mut Vec<HardenFinding>) -> Result<()> {
-    let raw = fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?;
-    let value: Value = serde_json::from_str(&raw).with_context(|| format!("failed to parse {}", path.display()))?;
+    let raw =
+        fs::read_to_string(path).with_context(|| format!("failed to read {}", path.display()))?;
+    let value: Value = serde_json::from_str(&raw)
+        .with_context(|| format!("failed to parse {}", path.display()))?;
     let file = path.display().to_string();
 
     if let Some(perms) = value.get("permissions").and_then(Value::as_array) {
@@ -162,7 +183,9 @@ fn inspect_capability_file(path: &Path, findings: &mut Vec<HardenFinding>) -> Re
                     code: "TS-HARDEN-REMOTE-WILDCARD",
                     file: file.clone(),
                     message: format!("Overly broad remote URL allowed: {url}"),
-                    recommendation: "Replace with explicit HTTPS origins required by the application.".to_string(),
+                    recommendation:
+                        "Replace with explicit HTTPS origins required by the application."
+                            .to_string(),
                 });
             } else if url.contains('*') {
                 findings.push(HardenFinding {
@@ -185,7 +208,10 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     fn temp_project() -> PathBuf {
-        let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
         std::env::temp_dir().join(format!("taurishield-harden-test-{nonce}"))
     }
 
@@ -194,10 +220,20 @@ mod tests {
         let root = temp_project();
         let src = root.join("src-tauri");
         fs::create_dir_all(&src).unwrap();
-        fs::write(src.join("tauri.conf.json"), r#"{"app":{"withGlobalTauri":true,"security":{"csp":null}}}"#).unwrap();
+        fs::write(
+            src.join("tauri.conf.json"),
+            r#"{"app":{"withGlobalTauri":true,"security":{"csp":null}}}"#,
+        )
+        .unwrap();
         let report = inspect_tauri_project(&root).unwrap();
-        assert!(report.findings.iter().any(|f| f.code == "TS-HARDEN-GLOBAL-TAURI"));
-        assert!(report.findings.iter().any(|f| f.code == "TS-HARDEN-CSP-MISSING"));
+        assert!(report
+            .findings
+            .iter()
+            .any(|f| f.code == "TS-HARDEN-GLOBAL-TAURI"));
+        assert!(report
+            .findings
+            .iter()
+            .any(|f| f.code == "TS-HARDEN-CSP-MISSING"));
         let _ = fs::remove_dir_all(root);
     }
 
@@ -207,11 +243,25 @@ mod tests {
         let caps = root.join("src-tauri/capabilities");
         fs::create_dir_all(&caps).unwrap();
         fs::create_dir_all(root.join("src-tauri")).unwrap();
-        fs::write(root.join("src-tauri/tauri.conf.json"), r#"{"app":{"withGlobalTauri":false,"security":{"csp":"default-src 'self'"}}}"#).unwrap();
-        fs::write(caps.join("default.json"), r#"{"permissions":["shell:allow-open"],"remote":{"urls":["https://*.*"]}}"#).unwrap();
+        fs::write(
+            root.join("src-tauri/tauri.conf.json"),
+            r#"{"app":{"withGlobalTauri":false,"security":{"csp":"default-src 'self'"}}}"#,
+        )
+        .unwrap();
+        fs::write(
+            caps.join("default.json"),
+            r#"{"permissions":["shell:allow-open"],"remote":{"urls":["https://*.*"]}}"#,
+        )
+        .unwrap();
         let report = inspect_tauri_project(&root).unwrap();
-        assert!(report.findings.iter().any(|f| f.code == "TS-HARDEN-SHELL-PERMISSION"));
-        assert!(report.findings.iter().any(|f| f.code == "TS-HARDEN-REMOTE-WILDCARD"));
+        assert!(report
+            .findings
+            .iter()
+            .any(|f| f.code == "TS-HARDEN-SHELL-PERMISSION"));
+        assert!(report
+            .findings
+            .iter()
+            .any(|f| f.code == "TS-HARDEN-REMOTE-WILDCARD"));
         let _ = fs::remove_dir_all(root);
     }
 }

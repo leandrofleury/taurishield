@@ -36,7 +36,10 @@ pub fn evaluate_manifest(manifest: &Manifest) -> Vec<Finding> {
         });
     }
 
-    if manifest.security.permissions.camera || manifest.security.permissions.microphone || manifest.security.permissions.geolocation {
+    if manifest.security.permissions.camera
+        || manifest.security.permissions.microphone
+        || manifest.security.permissions.geolocation
+    {
         findings.push(Finding {
             severity: Severity::High,
             code: "TS-PERM-SENSITIVE-DEVICE",
@@ -48,7 +51,8 @@ pub fn evaluate_manifest(manifest: &Manifest) -> Vec<Finding> {
         findings.push(Finding {
             severity: Severity::Medium,
             code: "TS-PERM-CLIPBOARD",
-            message: "Clipboard permission is enabled. Validate data exfiltration risks.".to_string(),
+            message: "Clipboard permission is enabled. Validate data exfiltration risks."
+                .to_string(),
         });
     }
 
@@ -56,10 +60,10 @@ pub fn evaluate_manifest(manifest: &Manifest) -> Vec<Finding> {
         findings.push(Finding {
             severity: Severity::Medium,
             code: "TS-PERM-DOWNLOADS",
-            message: "Downloads are enabled. Validate file handling and user confirmation flows.".to_string(),
+            message: "Downloads are enabled. Validate file handling and user confirmation flows."
+                .to_string(),
         });
     }
-
 
     if manifest.security.profile == SecurityProfile::Kiosk {
         if manifest.security.csp != CspMode::Strict {
@@ -81,12 +85,15 @@ pub fn evaluate_manifest(manifest: &Manifest) -> Vec<Finding> {
             findings.push(Finding {
                 severity: Severity::High,
                 code: "TS-KIOSK-PERMISSIONS",
-                message: "Kiosk profile requires all optional permissions to be disabled.".to_string(),
+                message: "Kiosk profile requires all optional permissions to be disabled."
+                    .to_string(),
             });
         }
     }
 
-    if manifest.security.profile == SecurityProfile::Strict && manifest.security.csp != CspMode::Strict {
+    if manifest.security.profile == SecurityProfile::Strict
+        && manifest.security.csp != CspMode::Strict
+    {
         findings.push(Finding {
             severity: Severity::High,
             code: "TS-CSP-STRICT",
@@ -131,26 +138,40 @@ mod tests {
                 identifier: "br.com.taurishield.test".to_string(),
                 version: "0.3.0-beta.1".to_string(),
             },
-            source: Source { url: "https://example.com".to_string() },
+            source: Source {
+                url: "https://example.com".to_string(),
+            },
             security: Security {
                 profile: SecurityProfile::Strict,
                 csp: CspMode::Strict,
                 permissions,
             },
-            allowlist: Allowlist { domains: vec!["example.com".to_string()] },
+            allowlist: Allowlist {
+                domains: vec!["example.com".to_string()],
+            },
         }
     }
 
     #[test]
     fn shell_is_critical() {
-        let findings = evaluate_manifest(&manifest_with_permissions(Permissions { shell: true, ..Default::default() }));
-        assert!(findings.iter().any(|f| f.code == "TS-PERM-SHELL" && f.severity == Severity::Critical));
+        let findings = evaluate_manifest(&manifest_with_permissions(Permissions {
+            shell: true,
+            ..Default::default()
+        }));
+        assert!(findings
+            .iter()
+            .any(|f| f.code == "TS-PERM-SHELL" && f.severity == Severity::Critical));
     }
 
     #[test]
     fn filesystem_is_high() {
-        let findings = evaluate_manifest(&manifest_with_permissions(Permissions { filesystem: true, ..Default::default() }));
-        assert!(findings.iter().any(|f| f.code == "TS-PERM-FS" && f.severity == Severity::High));
+        let findings = evaluate_manifest(&manifest_with_permissions(Permissions {
+            filesystem: true,
+            ..Default::default()
+        }));
+        assert!(findings
+            .iter()
+            .any(|f| f.code == "TS-PERM-FS" && f.severity == Severity::High));
     }
 
     #[test]
@@ -163,7 +184,10 @@ mod tests {
 
     #[test]
     fn kiosk_blocks_optional_permissions() {
-        let mut manifest = manifest_with_permissions(Permissions { notifications: true, ..Default::default() });
+        let mut manifest = manifest_with_permissions(Permissions {
+            notifications: true,
+            ..Default::default()
+        });
         manifest.security.profile = SecurityProfile::Kiosk;
         let findings = evaluate_manifest(&manifest);
         assert!(findings.iter().any(|f| f.code == "TS-KIOSK-PERMISSIONS"));
@@ -174,6 +198,8 @@ mod tests {
         let mut manifest = manifest_with_permissions(Permissions::default());
         manifest.allowlist.domains = vec!["*".to_string()];
         let findings = evaluate_manifest(&manifest);
-        assert!(findings.iter().any(|f| f.code == "TS-ALLOWLIST-ANY" && f.severity == Severity::Critical));
+        assert!(findings
+            .iter()
+            .any(|f| f.code == "TS-ALLOWLIST-ANY" && f.severity == Severity::Critical));
     }
 }

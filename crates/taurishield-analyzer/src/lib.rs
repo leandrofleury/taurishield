@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
 use serde::Serialize;
 use std::{fs, path::Path};
-use taurishield_core::{Allowlist, Application, CspMode, Manifest, Permissions, Security, SecurityProfile, Source};
+use taurishield_core::{
+    Allowlist, Application, CspMode, Manifest, Permissions, Security, SecurityProfile, Source,
+};
 use url::Url;
 
 #[derive(Debug, Clone, Serialize)]
@@ -24,9 +26,16 @@ pub struct AnalysisFinding {
     pub message: String,
 }
 
-pub fn analyze_url(input_url: &str, name: Option<&str>, identifier: Option<&str>) -> Result<UrlAnalysis> {
+pub fn analyze_url(
+    input_url: &str,
+    name: Option<&str>,
+    identifier: Option<&str>,
+) -> Result<UrlAnalysis> {
     let url = Url::parse(input_url).context("invalid URL")?;
-    let host = url.host_str().context("URL must include a host")?.to_string();
+    let host = url
+        .host_str()
+        .context("URL must include a host")?
+        .to_string();
     let mut findings = Vec::new();
     let mut risk_score: u8 = 15;
 
@@ -34,7 +43,8 @@ pub fn analyze_url(input_url: &str, name: Option<&str>, identifier: Option<&str>
         findings.push(AnalysisFinding {
             severity: "critical",
             code: "TS-ANALYZE-INSECURE-SCHEME",
-            message: "URL does not use HTTPS. TauriShield requires HTTPS for generated manifests.".to_string(),
+            message: "URL does not use HTTPS. TauriShield requires HTTPS for generated manifests."
+                .to_string(),
         });
         risk_score = risk_score.saturating_add(70);
     }
@@ -57,7 +67,9 @@ pub fn analyze_url(input_url: &str, name: Option<&str>, identifier: Option<&str>
         risk_score = risk_score.saturating_add(5);
     }
 
-    let app_name = name.map(str::to_string).unwrap_or_else(|| title_from_host(&host));
+    let app_name = name
+        .map(str::to_string)
+        .unwrap_or_else(|| title_from_host(&host));
     let suggested_identifier = identifier
         .map(str::to_string)
         .unwrap_or_else(|| format!("br.com.taurishield.{}", slug_from_host(&host)));
@@ -68,13 +80,20 @@ pub fn analyze_url(input_url: &str, name: Option<&str>, identifier: Option<&str>
             identifier: suggested_identifier.clone(),
             version: "0.3.0-beta.1".to_string(),
         },
-        source: Source { url: normalized_url(&url) },
+        source: Source {
+            url: normalized_url(&url),
+        },
         security: Security {
             profile: SecurityProfile::Strict,
             csp: CspMode::Strict,
-            permissions: Permissions { notifications: false, ..Default::default() },
+            permissions: Permissions {
+                notifications: false,
+                ..Default::default()
+            },
         },
-        allowlist: Allowlist { domains: vec![host.clone()] },
+        allowlist: Allowlist {
+            domains: vec![host.clone()],
+        },
     };
 
     Ok(UrlAnalysis {
@@ -148,6 +167,9 @@ mod tests {
     fn insecure_scheme_increases_risk() {
         let analysis = analyze_url("http://example.com", None, None).unwrap();
         assert!(analysis.risk_score >= 80);
-        assert!(analysis.findings.iter().any(|f| f.code == "TS-ANALYZE-INSECURE-SCHEME"));
+        assert!(analysis
+            .findings
+            .iter()
+            .any(|f| f.code == "TS-ANALYZE-INSECURE-SCHEME"));
     }
 }

@@ -2,11 +2,11 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use serde::Serialize;
 use std::path::PathBuf;
+use taurishield_analyzer::{analyze_url, write_manifest_from_analysis};
 use taurishield_builder::generate_tauri_project;
 use taurishield_core::load_manifest;
-use taurishield_policy::{evaluate_manifest, Finding, Severity};
-use taurishield_analyzer::{analyze_url, write_manifest_from_analysis};
 use taurishield_harden::{inspect_tauri_project, write_harden_report};
+use taurishield_policy::{evaluate_manifest, Finding, Severity};
 
 #[derive(Parser)]
 #[command(name = "taurishield")]
@@ -18,8 +18,12 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Validate { manifest: PathBuf },
-    Audit { manifest: PathBuf },
+    Validate {
+        manifest: PathBuf,
+    },
+    Audit {
+        manifest: PathBuf,
+    },
     Report {
         manifest: PathBuf,
         #[arg(short, long, default_value = "taurishield-report.json")]
@@ -116,8 +120,14 @@ fn main() -> Result<()> {
             let generated = generate_tauri_project(&parsed, &output)?;
             println!("Generated Tauri project: {}", generated.root_dir.display());
             println!("Generated config: {}", generated.tauri_conf.display());
-            println!("Generated capabilities: {}", generated.capabilities.display());
-            println!("Next: cd {} && pnpm install && pnpm tauri build", generated.root_dir.display());
+            println!(
+                "Generated capabilities: {}",
+                generated.capabilities.display()
+            );
+            println!(
+                "Next: cd {} && pnpm install && pnpm tauri build",
+                generated.root_dir.display()
+            );
         }
         Commands::ReleaseCheck { manifest, output } => {
             let parsed = load_manifest(&manifest)?;
@@ -127,19 +137,31 @@ fn main() -> Result<()> {
             let generated = generate_tauri_project(&parsed, &output)?;
             let release_dir = generated.root_dir.join("release-evidence");
             std::fs::create_dir_all(&release_dir)?;
-            std::fs::write(release_dir.join("taurishield-report.json"), serde_json::to_string_pretty(&AuditReport {
-                schema_version: "taurishield.audit.v1",
-                application: parsed.application.name,
-                identifier: parsed.application.identifier,
-                version: parsed.application.version,
-                source_url: parsed.source.url,
-                findings,
-                blocked: false,
-            })?)?;
-            std::fs::write(release_dir.join("RELEASE_CHECKLIST.md"), release_checklist())?;
+            std::fs::write(
+                release_dir.join("taurishield-report.json"),
+                serde_json::to_string_pretty(&AuditReport {
+                    schema_version: "taurishield.audit.v1",
+                    application: parsed.application.name,
+                    identifier: parsed.application.identifier,
+                    version: parsed.application.version,
+                    source_url: parsed.source.url,
+                    findings,
+                    blocked: false,
+                })?,
+            )?;
+            std::fs::write(
+                release_dir.join("RELEASE_CHECKLIST.md"),
+                release_checklist(),
+            )?;
             println!("Release evidence generated at {}", release_dir.display());
         }
-        Commands::Analyze { url, name, identifier, output, json } => {
+        Commands::Analyze {
+            url,
+            name,
+            identifier,
+            output,
+            json,
+        } => {
             let analysis = analyze_url(&url, name.as_deref(), identifier.as_deref())?;
             write_manifest_from_analysis(&analysis, &output)?;
             if json {
@@ -152,7 +174,10 @@ fn main() -> Result<()> {
                     println!("No analysis findings detected.");
                 } else {
                     for finding in &analysis.findings {
-                        println!("{} [{}] {}", finding.severity, finding.code, finding.message);
+                        println!(
+                            "{} [{}] {}",
+                            finding.severity, finding.code, finding.message
+                        );
                     }
                 }
                 println!("Next: taurishield validate {}", output.display());
@@ -166,7 +191,10 @@ fn main() -> Result<()> {
                 println!("No hardening findings detected.");
             } else {
                 for finding in &report.findings {
-                    println!("{} [{}] {}", finding.severity, finding.code, finding.message);
+                    println!(
+                        "{} [{}] {}",
+                        finding.severity, finding.code, finding.message
+                    );
                 }
             }
             if report.blocked {
@@ -184,12 +212,17 @@ fn print_findings_or_ok(findings: &[Finding]) {
         return;
     }
     for finding in findings {
-        println!("{:?} [{}] {}", finding.severity, finding.code, finding.message);
+        println!(
+            "{:?} [{}] {}",
+            finding.severity, finding.code, finding.message
+        );
     }
 }
 
 fn has_blocking_findings(findings: &[Finding]) -> bool {
-    findings.iter().any(|f| matches!(f.severity, Severity::High | Severity::Critical))
+    findings
+        .iter()
+        .any(|f| matches!(f.severity, Severity::High | Severity::Critical))
 }
 
 fn block_on_high_or_critical(findings: &[Finding]) -> Result<()> {
@@ -209,19 +242,22 @@ fn sarif_report(manifest_path: &PathBuf, findings: &[Finding]) -> Result<String>
         })
     }).collect();
 
-    let results: Vec<_> = findings.iter().map(|f| {
-        serde_json::json!({
-            "ruleId": f.code,
-            "level": sarif_level(&f.severity),
-            "message": { "text": f.message },
-            "locations": [{
-                "physicalLocation": {
-                    "artifactLocation": { "uri": manifest_path.to_string_lossy() },
-                    "region": { "startLine": 1 }
-                }
-            }]
+    let results: Vec<_> = findings
+        .iter()
+        .map(|f| {
+            serde_json::json!({
+                "ruleId": f.code,
+                "level": sarif_level(&f.severity),
+                "message": { "text": f.message },
+                "locations": [{
+                    "physicalLocation": {
+                        "artifactLocation": { "uri": manifest_path.to_string_lossy() },
+                        "region": { "startLine": 1 }
+                    }
+                }]
+            })
         })
-    }).collect();
+        .collect();
 
     let value = serde_json::json!({
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",

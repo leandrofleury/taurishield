@@ -46,14 +46,22 @@ pub enum CspMode {
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct Permissions {
-    #[serde(default)] pub notifications: bool,
-    #[serde(default)] pub clipboard: bool,
-    #[serde(default)] pub downloads: bool,
-    #[serde(default)] pub shell: bool,
-    #[serde(default)] pub filesystem: bool,
-    #[serde(default)] pub camera: bool,
-    #[serde(default)] pub microphone: bool,
-    #[serde(default)] pub geolocation: bool,
+    #[serde(default)]
+    pub notifications: bool,
+    #[serde(default)]
+    pub clipboard: bool,
+    #[serde(default)]
+    pub downloads: bool,
+    #[serde(default)]
+    pub shell: bool,
+    #[serde(default)]
+    pub filesystem: bool,
+    #[serde(default)]
+    pub camera: bool,
+    #[serde(default)]
+    pub microphone: bool,
+    #[serde(default)]
+    pub geolocation: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -85,21 +93,28 @@ pub enum ManifestError {
 
 pub fn load_manifest(path: &Path) -> Result<Manifest, ManifestError> {
     let raw = fs::read_to_string(path).map_err(|e| ManifestError::Read(e.to_string()))?;
-    let manifest: Manifest = serde_yaml::from_str(&raw).map_err(|e| ManifestError::Parse(e.to_string()))?;
+    let manifest: Manifest =
+        serde_yaml::from_str(&raw).map_err(|e| ManifestError::Parse(e.to_string()))?;
     validate_manifest_basics(&manifest)?;
     Ok(manifest)
 }
 
 pub fn validate_manifest_basics(manifest: &Manifest) -> Result<(), ManifestError> {
     if !is_reverse_dns_identifier(&manifest.application.identifier) {
-        return Err(ManifestError::InvalidIdentifier(manifest.application.identifier.clone()));
+        return Err(ManifestError::InvalidIdentifier(
+            manifest.application.identifier.clone(),
+        ));
     }
 
-    let url = Url::parse(&manifest.source.url).map_err(|e| ManifestError::InvalidUrl(e.to_string()))?;
+    let url =
+        Url::parse(&manifest.source.url).map_err(|e| ManifestError::InvalidUrl(e.to_string()))?;
     if url.scheme() != "https" {
         return Err(ManifestError::InsecureUrl(manifest.source.url.clone()));
     }
-    let host = url.host_str().ok_or(ManifestError::MissingHost)?.to_string();
+    let host = url
+        .host_str()
+        .ok_or(ManifestError::MissingHost)?
+        .to_string();
 
     if manifest.allowlist.domains.is_empty() {
         return Err(ManifestError::EmptyAllowlist);
@@ -111,7 +126,12 @@ pub fn validate_manifest_basics(manifest: &Manifest) -> Result<(), ManifestError
         }
     }
 
-    if !manifest.allowlist.domains.iter().any(|d| domain_matches(&host, d)) {
+    if !manifest
+        .allowlist
+        .domains
+        .iter()
+        .any(|d| domain_matches(&host, d))
+    {
         return Err(ManifestError::SourceNotAllowlisted(host));
     }
     Ok(())
@@ -126,11 +146,19 @@ pub fn domain_matches(host: &str, allowlisted: &str) -> bool {
 
 fn is_reverse_dns_identifier(value: &str) -> bool {
     let parts: Vec<&str> = value.split('.').collect();
-    if parts.len() < 3 { return false; }
+    if parts.len() < 3 {
+        return false;
+    }
     parts.iter().all(|part| {
         !part.is_empty()
-            && part.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-            && part.chars().next().map(|c| c.is_ascii_alphanumeric()).unwrap_or(false)
+            && part
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            && part
+                .chars()
+                .next()
+                .map(|c| c.is_ascii_alphanumeric())
+                .unwrap_or(false)
     })
 }
 
@@ -145,13 +173,17 @@ mod tests {
                 identifier: "br.com.taurishield.chatgpt".to_string(),
                 version: "0.3.0-beta.1".to_string(),
             },
-            source: Source { url: "https://chatgpt.com".to_string() },
+            source: Source {
+                url: "https://chatgpt.com".to_string(),
+            },
             security: Security {
                 profile: SecurityProfile::Strict,
                 csp: CspMode::Strict,
                 permissions: Permissions::default(),
             },
-            allowlist: Allowlist { domains: vec!["chatgpt.com".to_string()] },
+            allowlist: Allowlist {
+                domains: vec!["chatgpt.com".to_string()],
+            },
         }
     }
 
@@ -172,27 +204,39 @@ mod tests {
     fn rejects_http_source() {
         let mut manifest = valid_manifest();
         manifest.source.url = "http://chatgpt.com".to_string();
-        assert!(matches!(validate_manifest_basics(&manifest), Err(ManifestError::InsecureUrl(_))));
+        assert!(matches!(
+            validate_manifest_basics(&manifest),
+            Err(ManifestError::InsecureUrl(_))
+        ));
     }
 
     #[test]
     fn rejects_source_not_in_allowlist() {
         let mut manifest = valid_manifest();
         manifest.allowlist.domains = vec!["example.com".to_string()];
-        assert!(matches!(validate_manifest_basics(&manifest), Err(ManifestError::SourceNotAllowlisted(_))));
+        assert!(matches!(
+            validate_manifest_basics(&manifest),
+            Err(ManifestError::SourceNotAllowlisted(_))
+        ));
     }
 
     #[test]
     fn rejects_invalid_allowlist_domain_with_scheme() {
         let mut manifest = valid_manifest();
         manifest.allowlist.domains = vec!["https://chatgpt.com".to_string()];
-        assert!(matches!(validate_manifest_basics(&manifest), Err(ManifestError::InvalidAllowlistDomain(_))));
+        assert!(matches!(
+            validate_manifest_basics(&manifest),
+            Err(ManifestError::InvalidAllowlistDomain(_))
+        ));
     }
 
     #[test]
     fn rejects_non_reverse_dns_identifier() {
         let mut manifest = valid_manifest();
         manifest.application.identifier = "chatgpt".to_string();
-        assert!(matches!(validate_manifest_basics(&manifest), Err(ManifestError::InvalidIdentifier(_))));
+        assert!(matches!(
+            validate_manifest_basics(&manifest),
+            Err(ManifestError::InvalidIdentifier(_))
+        ));
     }
 }
