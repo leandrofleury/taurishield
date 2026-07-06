@@ -169,19 +169,6 @@ fn main() {{
 }
 
 fn tauri_conf_json(manifest: &Manifest) -> Result<String> {
-    let remote_urls: Vec<String> = manifest
-        .allowlist
-        .domains
-        .iter()
-        .map(|d| {
-            format!(
-                "https://{}",
-                d.trim_start_matches("https://")
-                    .trim_start_matches("http://")
-            )
-        })
-        .collect();
-
     let csp = match manifest.security.csp {
         CspMode::Strict => strict_csp(&manifest.allowlist.domains),
         CspMode::Standard => standard_csp(&manifest.allowlist.domains),

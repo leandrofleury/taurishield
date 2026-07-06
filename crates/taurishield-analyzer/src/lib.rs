@@ -128,8 +128,7 @@ fn normalized_url(url: &Url) -> String {
 
 fn title_from_host(host: &str) -> String {
     host.split('.')
-        .filter(|part| *part != "www")
-        .next()
+        .find(|part| *part != "www")
         .map(|part| {
             let mut chars = part.chars();
             match chars.next() {

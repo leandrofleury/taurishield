@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use serde::Serialize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use taurishield_analyzer::{analyze_url, write_manifest_from_analysis};
 use taurishield_builder::generate_tauri_project;
 use taurishield_core::load_manifest;
@@ -232,7 +232,7 @@ fn block_on_high_or_critical(findings: &[Finding]) -> Result<()> {
     Ok(())
 }
 
-fn sarif_report(manifest_path: &PathBuf, findings: &[Finding]) -> Result<String> {
+fn sarif_report(manifest_path: &Path, findings: &[Finding]) -> Result<String> {
     let rules: Vec<_> = findings.iter().map(|f| {
         serde_json::json!({
             "id": f.code,
