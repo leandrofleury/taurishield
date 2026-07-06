@@ -1,0 +1,24 @@
+application:
+  name: Open WebUI
+  identifier: br.com.taurishield.openwebui
+  version: 1.0.0
+
+source:
+  url: https://openwebui.internal.example.com
+
+security:
+  profile: standard
+  csp: strict
+  permissions:
+    notifications: false
+    clipboard: false
+    downloads: false
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - openwebui.internal.example.com

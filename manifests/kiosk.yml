@@ -1,0 +1,24 @@
+application:
+  name: Security Kiosk
+  identifier: br.com.taurishield.kiosk
+  version: 0.3.0-beta.1
+
+source:
+  url: https://status.example.com
+
+security:
+  profile: kiosk
+  csp: strict
+  permissions:
+    notifications: false
+    clipboard: false
+    downloads: false
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - status.example.com

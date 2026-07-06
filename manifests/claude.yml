@@ -1,0 +1,25 @@
+application:
+  name: Claude
+  identifier: br.com.taurishield.claude
+  version: 1.0.0
+
+source:
+  url: https://claude.ai
+
+security:
+  profile: strict
+  csp: strict
+  permissions:
+    notifications: true
+    clipboard: false
+    downloads: false
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - claude.ai
+    - '*.anthropic.com'

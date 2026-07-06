@@ -1,0 +1,24 @@
+application:
+  name: Snipe-IT
+  identifier: br.com.taurishield.snipeit
+  version: 1.0.0
+
+source:
+  url: https://snipeit.internal.example.com
+
+security:
+  profile: standard
+  csp: strict
+  permissions:
+    notifications: false
+    clipboard: false
+    downloads: true
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - snipeit.internal.example.com

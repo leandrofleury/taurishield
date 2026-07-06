@@ -1,0 +1,24 @@
+application:
+  name: Grafana Internal
+  identifier: br.com.taurishield.grafana
+  version: 0.3.0-beta.1
+
+source:
+  url: https://grafana.example.com
+
+security:
+  profile: standard
+  csp: standard
+  permissions:
+    notifications: false
+    clipboard: false
+    downloads: false
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - grafana.example.com

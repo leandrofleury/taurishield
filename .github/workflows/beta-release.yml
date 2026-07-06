@@ -1,0 +1,45 @@
+name: Beta Release Evidence
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  beta-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Quality gate
+        run: ./scripts/local_check.sh
+
+      - name: Generate SARIF
+        run: cargo run -p taurishield -- sarif manifests/chatgpt.yml --output taurishield.sarif
+
+      - name: Generate release evidence
+        run: cargo run -p taurishield -- release-check manifests/chatgpt.yml --output dist
+
+      - name: Generate checksums
+        run: ./scripts/generate_checksums.sh dist
+
+      - name: Upload beta evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: taurishield-beta-evidence
+          path: |
+            taurishield.sarif
+            dist/**
+            CHANGELOG.md
+            release/RELEASE_TEMPLATE.md

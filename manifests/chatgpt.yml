@@ -1,0 +1,26 @@
+application:
+  name: ChatGPT
+  identifier: br.com.taurishield.chatgpt
+  version: 1.0.0
+
+source:
+  url: https://chatgpt.com
+
+security:
+  profile: strict
+  csp: strict
+  permissions:
+    notifications: true
+    clipboard: false
+    downloads: false
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - chatgpt.com
+    - auth.openai.com
+    - platform.openai.com
