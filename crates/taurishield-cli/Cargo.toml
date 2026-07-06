@@ -9,11 +9,11 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
-taurishield-core = { path = "../taurishield-core" }
-taurishield-policy = { path = "../taurishield-policy" }
+taurishield-core = { path = "../taurishield-core", version = "1.0.0-rc.1" }
+taurishield-policy = { path = "../taurishield-policy", version = "1.0.0-rc.1" }
 
-taurishield-builder = { path = "../taurishield-builder" }
-taurishield-analyzer = { path = "../taurishield-analyzer" }
-taurishield-harden = { path = "../taurishield-harden" }
+taurishield-builder = { path = "../taurishield-builder", version = "1.0.0-rc.1" }
+taurishield-analyzer = { path = "../taurishield-analyzer", version = "1.0.0-rc.1" }
+taurishield-harden = { path = "../taurishield-harden", version = "1.0.0-rc.1" }
 serde.workspace = true
 serde_json.workspace = true

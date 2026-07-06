@@ -101,7 +101,8 @@ jobs:
       - name: Generate SBOM
         run: |
           mkdir -p sbom
-          cargo cyclonedx --format json --output-file sbom/taurishield.cdx.json
+          cargo cyclonedx --format json --override-filename taurishield
+          find crates -name "taurishield.cdx.json" -exec cp --parents {} sbom/ \;
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4

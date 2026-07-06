@@ -1,39 +1,43 @@
-# TauriShield dependency policy.
-# Conservative defaults for corporate/supply-chain aware builds.
+[graph]
+all-features = true
 
 [advisories]
-db-path = "~/.cargo/advisory-db"
-db-urls = ["https://github.com/rustsec/advisory-db"]
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "deny"
-notice = "warn"
+version = 2
+yanked = "warn"
 ignore = []
 
 [licenses]
-unlicensed = "deny"
+version = 2
+confidence-threshold = 0.93
+
 allow = [
-  "MIT",
-  "Apache-2.0",
-  "BSD-2-Clause",
-  "BSD-3-Clause",
-  "ISC",
-  "Unicode-DFS-2016",
-  "MPL-2.0",
+    "Apache-2.0",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib"
 ]
-copyleft = "warn"
-allow-osi-fsf-free = "neither"
-default = "deny"
+
+exceptions = []
 
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
 highlight = "all"
+
+allow = []
+deny = []
 skip = []
 skip-tree = []
 
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+allow-registry = [
+    "https://github.com/rust-lang/crates.io-index"
+]
+
 allow-git = []
