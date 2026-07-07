@@ -1,8 +1,8 @@
-# TauriShield v1.0.0-rc.1 Release Notes
+# TauriShield v1.0.0-rc.2 Release Notes
 
 ## Release status
 
-TauriShield `v1.0.0-rc.1` is a release candidate focused on validating the secure-by-default architecture before a stable `v1.0.0` release.
+TauriShield `v1.0.0-rc.2` is a release candidate focused on validating the secure-by-default architecture before a stable `v1.0.0` release.
 
 This version is suitable for security review, local validation, CI validation, and controlled lab usage. It is not yet positioned as a final stable release.
 

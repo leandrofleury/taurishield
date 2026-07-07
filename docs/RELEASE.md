@@ -10,7 +10,7 @@ TauriShield uses semantic versioning:
 - `1.0.0-rc.x`: release candidates for validating the stable manifest and release process.
 - `1.x`: stable manifest format and stable CLI behavior.
 
-Current release candidate: `v1.0.0-rc.1`.
+Current release candidate: `v1.0.0-rc.2`.
 
 ## Release branches
 
@@ -111,8 +111,8 @@ Only tag after all local and CI gates pass.
 ```bash
 git checkout main
 git pull origin main
-git tag -a v1.0.0-rc.1 -m "TauriShield v1.0.0-rc.1"
-git push origin v1.0.0-rc.1
+git tag -a v1.0.0-rc.2 -m "TauriShield v1.0.0-rc.2"
+git push origin v1.0.0-rc.2
 ```
 
 ## Generated application warning
