@@ -6,8 +6,9 @@ members = [
   "crates/taurishield-policy",
   "crates/taurishield-builder",
   "crates/taurishield-analyzer",
-  "crates/taurishield-harden"
-]
+  "crates/taurishield-harden",
+  "crates/taurishield-enforcer",
+  "crates/taurishield-enforcer"]
 
 [workspace.package]
 edition = "2021"
