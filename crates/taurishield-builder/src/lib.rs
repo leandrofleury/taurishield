@@ -20,7 +20,8 @@ pub fn generate_tauri_project(manifest: &Manifest, output_base: &Path) -> Result
     let caps_dir = src_tauri.join("capabilities");
     let src_dir = src_tauri.join("src");
     let icons_dir = src_tauri.join("icons");
-    let ui_dir = root_dir.join("src");
+    let web_dir = root_dir.join("web");
+    let ui_dir = web_dir.join("src");
 
     fs::create_dir_all(&caps_dir).context("failed to create capabilities directory")?;
     fs::create_dir_all(&src_dir).context("failed to create Rust source directory")?;
@@ -28,7 +29,7 @@ pub fn generate_tauri_project(manifest: &Manifest, output_base: &Path) -> Result
     fs::create_dir_all(&ui_dir).context("failed to create UI source directory")?;
 
     fs::write(root_dir.join("package.json"), package_json(manifest))?;
-    fs::write(root_dir.join("index.html"), index_html(manifest))?;
+    fs::write(web_dir.join("index.html"), index_html(manifest))?;
     fs::write(ui_dir.join("main.js"), main_js(manifest))?;
     fs::write(src_tauri.join("Cargo.toml"), cargo_toml(manifest))?;
     fs::write(src_tauri.join("build.rs"), build_rs())?;
@@ -207,7 +208,7 @@ fn tauri_conf_json(manifest: &Manifest) -> Result<String> {
             "beforeDevCommand": "",
             "beforeBuildCommand": "",
             "devUrl": manifest.source.url,
-            "frontendDist": "../"
+            "frontendDist": "../web"
         },
         "app": {
             "withGlobalTauri": false,
@@ -372,6 +373,8 @@ mod tests {
         let output = temp_output();
         let generated = generate_tauri_project(&manifest(), &output).unwrap();
         assert!(generated.root_dir.join("package.json").exists());
+        assert!(generated.root_dir.join("web/index.html").exists());
+        assert!(generated.root_dir.join("web/src/main.js").exists());
         assert!(generated.tauri_conf.exists());
         assert!(generated.capabilities.exists());
         assert!(generated.root_dir.join("src-tauri/src/main.rs").exists());
@@ -391,6 +394,7 @@ mod tests {
         let generated = generate_tauri_project(&manifest(), &output).unwrap();
         let raw = fs::read_to_string(generated.tauri_conf).unwrap();
         let value: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(value["build"]["frontendDist"], "../web");
         assert_eq!(value["app"]["withGlobalTauri"], false);
         assert!(value["app"]["security"]["csp"]
             .as_str()
