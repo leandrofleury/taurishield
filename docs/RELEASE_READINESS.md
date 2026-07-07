@@ -1,6 +1,6 @@
 # Release Readiness Checklist
 
-Use this checklist to decide whether `v1.0.0-rc.1` is ready to be tagged, published, or merged into a release branch.
+Use this checklist to decide whether `v1.0.0-rc.2` is ready to be tagged, published, or merged into a release branch.
 
 ## 1. Repository hygiene
 
@@ -117,8 +117,8 @@ Only tag after all previous gates pass.
 Recommended tag command:
 
 ```bash
-git tag -a v1.0.0-rc.1 -m "TauriShield v1.0.0-rc.1"
-git push origin v1.0.0-rc.1
+git tag -a v1.0.0-rc.2 -m "TauriShield v1.0.0-rc.2"
+git push origin v1.0.0-rc.2
 ```
 
 Do not tag if the branch has uncommitted changes or failing GitHub Actions.

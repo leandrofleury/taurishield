@@ -8,7 +8,7 @@ O TauriShield foi criado para transformar aplicações web em aplicativos deskto
 
 ## Status
 
-Versão: **1.0.0-rc.1**
+Versão: **1.0.0-rc.2**
 
 Este pacote é um **Release Candidate**. Ele já está estruturado como produto publicável, mas ainda deve ser compilado e testado localmente com `cargo` antes de uso real.
 

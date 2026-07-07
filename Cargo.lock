@@ -422,7 +422,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -438,7 +438,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield-analyzer"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "serde",
@@ -449,7 +449,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield-builder"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "serde_json",
@@ -458,7 +458,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield-core"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "serde",
  "serde_yaml",
@@ -468,7 +468,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield-enforcer"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "serde",
  "taurishield-core",
@@ -477,7 +477,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield-harden"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "serde",
@@ -486,7 +486,7 @@ dependencies = [
 
 [[package]]
 name = "taurishield-policy"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "serde",
  "taurishield-core",
