@@ -1,0 +1,24 @@
+application:
+  name: CrowdStrike Falcon
+  identifier: br.com.taurishield.crowdstrike
+  version: 1.0.0
+
+source:
+  url: https://falcon.us-2.crowdstrike.com/login/
+
+security:
+  profile: strict
+  csp: strict
+  permissions:
+    notifications: false
+    clipboard: false
+    downloads: true
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - falcon.us-2.crowdstrike.com
