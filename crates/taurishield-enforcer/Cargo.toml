@@ -1,0 +1,13 @@
+[package]
+name = "taurishield-enforcer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Security enforcement engine for TauriShield"
+
+[dependencies]
+serde.workspace = true
+taurishield-core = { path = "../taurishield-core", version = "1.0.0-rc.1" }
+url.workspace = true

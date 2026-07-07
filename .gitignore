@@ -4,7 +4,6 @@
 *.log
 .env
 .DS_Store
-Cargo.lock
 # Generated CycloneDX artifacts
 **/taurishield.cdx.json
 **/taurishield.json
