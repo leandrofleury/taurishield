@@ -1,0 +1,33 @@
+application:
+  name: Gemini
+  identifier: br.com.taurishield.gemini
+  version: 1.0.0
+
+source:
+  url: https://gemini.google.com
+
+security:
+  profile: strict
+  csp: strict
+  permissions:
+    notifications: false
+    clipboard: false
+    downloads: false
+    shell: false
+    filesystem: false
+    camera: false
+    microphone: false
+    geolocation: false
+
+allowlist:
+  domains:
+    - gemini.google.com
+    - accounts.google.com
+    - myaccount.google.com
+    - www.google.com
+    - www.gstatic.com
+    - fonts.gstatic.com
+    - fonts.googleapis.com
+    - ssl.gstatic.com
+    - ogs.google.com
+    - apis.google.com
