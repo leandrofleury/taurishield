@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use taurishield_analyzer::{analyze_url, write_manifest_from_analysis};
 use taurishield_builder::generate_tauri_project;
 use taurishield_core::load_manifest;
+use taurishield_enforcer::{Enforcer, EvaluationReport};
 use taurishield_harden::{inspect_tauri_project, write_harden_report};
 use taurishield_policy::{evaluate_manifest, Finding, Severity};
 
@@ -113,21 +114,15 @@ fn main() -> Result<()> {
         }
         Commands::Build { manifest, output } => {
             let parsed = load_manifest(&manifest)?;
-            let findings = evaluate_manifest(&parsed);
-            print_findings_or_ok(&findings);
-            block_on_high_or_critical(&findings)?;
+
+            let enforcement = Enforcer::evaluate(&parsed);
+            if enforcement.has_blocking_violations() {
+                print_enforcement_failure(&enforcement);
+                anyhow::bail!("TauriShield security enforcement failed");
+            }
 
             let generated = generate_tauri_project(&parsed, &output)?;
             println!("Generated Tauri project: {}", generated.root_dir.display());
-            println!("Generated config: {}", generated.tauri_conf.display());
-            println!(
-                "Generated capabilities: {}",
-                generated.capabilities.display()
-            );
-            println!(
-                "Next: cd {} && pnpm install && pnpm tauri build",
-                generated.root_dir.display()
-            );
         }
         Commands::ReleaseCheck { manifest, output } => {
             let parsed = load_manifest(&manifest)?;
@@ -302,4 +297,26 @@ fn release_checklist() -> &'static str {
 - [ ] Attestation generated
 - [ ] Release notes reviewed
 "#
+}
+fn print_enforcement_failure(report: &EvaluationReport) {
+    eprintln!("TauriShield Security Enforcement Failed");
+    eprintln!();
+    eprintln!("Security Score: {}/100", report.score);
+    eprintln!();
+    eprintln!("Violations:");
+
+    for violation in &report.violations {
+        eprintln!();
+        eprintln!("[{}] {:?}", violation.id, violation.severity);
+        eprintln!("{}", violation.title);
+        eprintln!();
+        eprintln!("Description:");
+        eprintln!("{}", violation.description);
+        eprintln!();
+        eprintln!("Fix:");
+        eprintln!("{}", violation.fix);
+        eprintln!();
+        eprintln!("Reference:");
+        eprintln!("{}", violation.reference);
+    }
 }
