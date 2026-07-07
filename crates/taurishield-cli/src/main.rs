@@ -80,7 +80,11 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Validate { manifest } => {
             let parsed = load_manifest(&manifest)?;
-            println!("Manifest is valid: {}", parsed.application.name);
+            let enforcement = Enforcer::evaluate(&parsed);
+            print_validation_report(&enforcement);
+            if enforcement.has_blocking_violations() {
+                anyhow::bail!("Manifest failed security validation.");
+            }
         }
         Commands::Audit { manifest } => {
             let parsed = load_manifest(&manifest)?;
@@ -298,6 +302,28 @@ fn release_checklist() -> &'static str {
 - [ ] Release notes reviewed
 "#
 }
+fn print_validation_report(report: &EvaluationReport) {
+    println!("TauriShield Validation Report");
+    println!();
+    println!("Status: {}", if report.passed { "PASS" } else { "FAIL" });
+    println!("Security Score: {}/100", report.score);
+
+    if report.violations.is_empty() {
+        println!();
+        println!("No policy violations found.");
+        return;
+    }
+
+    println!();
+    println!("Violations:");
+    for violation in &report.violations {
+        println!();
+        println!("[{}] {:?}", violation.id, violation.severity);
+        println!("{}", violation.title);
+        println!("Fix: {}", violation.fix);
+    }
+}
+
 fn print_enforcement_failure(report: &EvaluationReport) {
     eprintln!("TauriShield Security Enforcement Failed");
     eprintln!();
