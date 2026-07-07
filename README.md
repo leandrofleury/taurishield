@@ -29,6 +29,20 @@ Este pacote é um **Release Candidate**. Ele já está estruturado como produto 
 - Harden scanner para projetos Tauri existentes
 - Documentação de threat model, supply chain, release e hardening
 
+## Security Guarantees
+
+TauriShield enforces secure-by-default guarantees for every generated Tauri project:
+
+- Global Tauri API disabled
+- Mandatory CSP
+- No shell permissions
+- No filesystem permissions
+- No remote wildcards
+- HTTPS-only remote origins
+- Explicit manifest allowlist
+
+See [Security Guarantees](docs/SECURITY_GUARANTEES.md).
+
 ## Comandos
 
 ```bash
